@@ -15,7 +15,7 @@
 --              what the maximum value of the counter can be
 -- inputs:
 -- -clk: the clock signal, count is changed on rising edge
--- -clk_en: if 0 clock pauses, if 1 clock counts
+-- -clk_en: if 1 clock pauses, if 0 clock counts
 -- -R: low active asynchronous reset
 -- -D: direction in which to count (1: up, 0: down)
 -- -max_ticks: when count > max_ticks the counter is reset

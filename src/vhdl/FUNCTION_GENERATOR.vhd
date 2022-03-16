@@ -52,10 +52,10 @@ architecture Behavioral of FUNCTION_GENERATOR is
   constant clk_width  : natural := 24;
 
   -- clock for digital to analog converter, runs on 25MHz
-  -- DAC clock frequency will be 100mhz / (2 * DAC_div) because
+  -- DAC clock frequency will be 100mhz / DAC_div because
   -- component creates internal SCLK on JA[3]
   constant DAC_div  : natural :=  4;
-  constant func_div : natural := 64;
+  constant func_div : natural := 68;
 
   -- constants that define the waveforms that one can configure
   constant CONST_WF  : natural := 0;
@@ -64,10 +64,11 @@ architecture Behavioral of FUNCTION_GENERATOR is
   constant RAMP_WF   : natural := 3;
 
   -- the configuration constants for initialization
-  constant CONST_CYC_TICKS : natural   := 100e6 / FUNC_div; -- initialise to 1s
+  constant CONST_CYC_TICKS : natural   := 2048; -- 100e6 / FUNC_div;
   constant CONST_HIGH      : natural   := 4095;
   constant CONST_LOW       : natural   := 0;
-  constant CONST_THRESH    : natural   := CONST_CYC_TICKS / 2;
+  constant CONST_DUTYCYCLE : natural   := 128;
+  -- constant CONST_THRESH    : natural   := CONST_CYC_TICKS * CONST_DUTYCYCLE / 255;
   constant CONST_DIR       : std_logic := '0';
   constant CONST_WAVEFORM  : natural   := ZIGZAG_WF;
 
@@ -76,7 +77,7 @@ architecture Behavioral of FUNCTION_GENERATOR is
              clk_width  : natural := 24;
 
              cyc_ticks_default : natural              := 255;
-             thresh_default    : natural              := 128;
+             dutycycle_default : natural              := 128;
              high_default      : natural              := 4095;
              low_default       : natural              := 0;
              waveform_default  : natural range 0 to 3 := 1;
@@ -209,7 +210,7 @@ begin
                 CLK_width  => CLK_WIDTH,
 
                 cyc_ticks_default => CONST_CYC_TICKS,
-                thresh_default    => CONST_THRESH,
+                dutycycle_default => CONST_DUTYCYCLE,
                 high_default      => CONST_HIGH,
                 low_default       => CONST_LOW,
                 waveform_default  => CONST_WAVEFORM,

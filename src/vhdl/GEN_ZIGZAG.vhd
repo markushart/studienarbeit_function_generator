@@ -64,7 +64,9 @@ architecture Behavioral of GEN_ZIGZAG is
   signal Q  : std_logic_vector(clk_width + data_width - 1 downto 0) := (others => '0');
   
   component GEN_COUNTER is
-    generic(data_width : natural := 32);
+    generic(data_width         : natural   := 32;
+            reset_on_overflow  : std_logic := '1';
+            reset_on_underflow : std_logic := '1');
     port (CLK       : in  std_logic;
           CE        : in  std_logic;
           R         : in  std_logic;
@@ -100,7 +102,10 @@ begin
   
   -- counter with max ticks half as count maximum
   counter : GEN_COUNTER
-    generic map(data_width => clk_width)
+    generic map(data_width => clk_width,
+                reset_on_underflow => '0',
+                reset_on_overflow => '0'
+                )
     port map(
       clk       => clk,
       CE        => count_en,
@@ -164,11 +169,11 @@ begin
     variable D : std_logic := '1';
   begin
     -- toggle the direction signal when zero or COUNTMAXHALF are reached
-    if rising_edge(clk) and CE = '0'then
+    if rising_edge(clk) and count_en = '0'then
       -- compare count to half of cyc_ticks
-      if count >= ct_half then
+      if count >= ct_half - 1 then
         D := '0';
-      elsif count <= 1 then
+      elsif count < 1 then
         D := '1';
       end if;
     end if;

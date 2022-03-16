@@ -60,7 +60,9 @@ architecture Behavioral of SQUARE_SIGNAL is
   signal count_EN : std_logic := '1';
   
   component GEN_COUNTER is
-    generic(data_width : natural := 32);
+    generic(data_width         : natural := 32;
+            reset_on_overflow  : std_logic := '1';
+            reset_on_underflow : std_logic := '1');
     port (CLK       : in  std_logic;
           CE        : in  std_logic;
           R         : in  std_logic;

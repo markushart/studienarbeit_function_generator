@@ -66,7 +66,9 @@ architecture Behavioral of GEN_RAMP is
   signal Q  : std_logic_vector(clk_width + data_width - 1 downto 0) := (others => '0');
   
   component GEN_COUNTER is
-    generic(data_width : natural := 32);
+    generic(data_width         : natural   := 32;
+            reset_on_overflow  : std_logic := '1';
+            reset_on_underflow : std_logic := '1');
     port (CLK       : in  std_logic;
           CE        : in  std_logic;
           R         : in  std_logic;

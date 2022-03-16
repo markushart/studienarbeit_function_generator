@@ -13,7 +13,9 @@
 --  analog converter
 --
 -- generic:
--- -
+-- - clk_ticks_per_bit: defines after how many clk ticks it takes to transfer
+--                      1 bit to pmodDA2
+-- 
 -- inputs:
 -- - CLK: the DAC-FPGA-Component clock, clock for the microchip is derived
 --        from this clock signal
@@ -22,7 +24,6 @@
 --              DAC-channel A
 -- - DATA_in_B: a vector that holds the current 12-Bit value for the
 --              DAC-channel B
--- outputs:
 -- outputs:
 -- - JA: the four PMOD pins used to drive the Digilent Pmod DA2
 --      - JA0: ~SYNC: Synchronization bit that works like a chip enable for DAC
@@ -83,8 +84,8 @@ architecture Behavioral of DIGITAL_ANALOG_CONVERTER is
   signal sclk_EN    : std_logic := '0';
   
   -- signals for SYNC management
-  signal in_buffer_A : std_logic_vector(11 downto 0) := (others => '1');
-  signal in_buffer_B : std_logic_vector(11 downto 0) := (others => '1');
+  signal in_buffer_A  : std_logic_vector(11 downto 0) := (others => '1');
+  signal in_buffer_B  : std_logic_vector(11 downto 0) := (others => '1');
 
 begin
 
@@ -116,7 +117,7 @@ begin
     end if;
   end process toggle_sclk;  
   
-  -- creates enable signal for channels, that work on the bit-transfer frequency
+  -- creates enable signal for channels, that works on the bit-transfer frequency
   ch_en : SCLK_ENABLE
     port map(CLK     => CLK,
              CE      => CE,
@@ -128,33 +129,28 @@ begin
   --------------------------------------------------------------------------
   -- SYNC management
   --------------------------------------------------------------------------
-
-  -- detect if ingoing data has changed
-  check_and_sync : process(CLK, CE)
-    variable bit_count  : natural range 0 to 15 := 7;
-  begin 
+  
+  sync_driver : process(CLK, channel_EN)
+    variable bit_count : natural range 0 to 16 := 7;
+    variable async_data_change : boolean;
+  begin
+    -- check if data in buffer is different from input data
+    async_data_change := (in_buffer_A /= DATA_in_A) or (in_buffer_B /= DATA_in_B);
+    
     if rising_edge(CLK) and channel_EN = '0' then
-
-      case bit_count is
-      when 15 =>
-        if ((DATA_in_A /= in_buffer_A)  or (DATA_in_B /= in_buffer_B)) then
-          -- if data from cycle before has changed, 
-          -- change data and pull down SYNC
+      if bit_count = 16 then
+        SYNC <= '1';
+        if  async_data_change then
           in_buffer_A <= DATA_in_A;
           in_buffer_B <= DATA_in_B;
-          SYNC        <= '0';
-          
           bit_count := 0;
-        else
-          SYNC <= '1';
         end if;
-      
-      when others =>
+      else
+        SYNC <= '0';
         bit_count := bit_count + 1;
-      
-      end case;
+      end if;
     end if;
-  end process check_and_sync;
+  end process sync_driver;
   
   --------------------------------------------------------------------------
   -- channel instantiation

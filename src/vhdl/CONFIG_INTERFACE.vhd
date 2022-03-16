@@ -8,8 +8,33 @@
 -- Project Name: 
 -- Target Devices: 
 -- Tool Versions: 
--- Description: 
--- 
+--- Description: 
+--  this component is the interface to configure the function generator
+--
+-- generic:
+-- - data_width: width of all data related configuration bit vectors
+-- - data_width: width of all clock related configuration bit vectors
+-- - <propertyname>_default: default value that the functiongenerator will start with
+-- - min_cyc_ticks: minimum for cyc_ticks configuration bit vector, usualy it will be 
+--   2 to fullfill shannon-nyquist theorem minimally
+-- - baud_clk_ticks: for the UART interface, define how many clk ticks occur while
+--   sending / receiving 1 bit
+--
+-- inputs:
+-- - CLK: the DAC-FPGA-Component clock, clock for the microchip is derived
+--        from this clock signal
+-- - CE: 0: Chip-enabled
+-- - RX: UARTs RX Signal for receiving data for configuration
+--
+-- outputs:
+-- - TX: the UARTs TX Signal for sending Bits       
+-- - cyc_ticks: the configuration for cycle time of functions
+-- - thresh: the threshhold for the square function
+-- - high: the high value the functions will emit
+-- - low: the low value the functions will emit
+-- - waveform: the current waveform the generator is emitting
+-- - direction: determines if the ramp function counts up or down
+--
 -- Dependencies: 
 -- 
 -- Revision:
@@ -33,7 +58,7 @@ entity CONFIG_INTERFACE is
                clk_width  : natural := 24;
                
                cyc_ticks_default : natural := 255;
-               thresh_default    : natural := 128;
+               dutycycle_default : natural := 128;
                high_default      : natural := 4095;
                low_default       : natural := 0;
                waveform_default  : natural range 0 to 3 := 1;
@@ -135,7 +160,7 @@ architecture Behavioral of CONFIG_INTERFACE is
   -- cyc_ticks:
   signal cts  : std_logic_vector(clk_width - 1 downto 0)  := std_logic_vector(to_unsigned(cyc_ticks_default, clk_width));
   -- threshhold_signal:
-  signal ths  : std_logic_vector(clk_width - 1 downto 0)  := std_logic_vector(to_unsigned(thresh_default, clk_width));
+  signal ths  : std_logic_vector(clk_width - 1 downto 0)  := std_logic_vector(to_unsigned(cyc_ticks_default * dutycycle_default / 256, clk_width));
   -- high_signal:
   signal hs   : std_logic_vector(data_width - 1 downto 0) := std_logic_vector(to_unsigned(high_default, data_width));
   -- low_signal:
@@ -198,8 +223,8 @@ begin
   process(CLK, state_machine_EN, rx_uart_rdy_hold)
     -- counts the bytes in the buffer
     variable byte_count : natural range 0 to INSTRUCTIONSIZE - 1 := 0;
-    -- duty_cycle:
-    variable dc  : unsigned(7 downto 0);
+    -- duty_cycle (initialized on 50%):
+    variable dc  : unsigned(7 downto 0) := x"80";
     -- product from which the threshhold is calculated
     variable th_product : std_logic_vector(clk_width + dc'length - 1 downto 0) := (others => '0');
  
@@ -255,7 +280,7 @@ begin
                 cts <= std_logic_vector(to_unsigned(min_cyc_ticks, clk_width));
             end if;
             -- turn the dutycycle into clock ticks threshhold
-            -- since dc's maximum is 255 the calculation goes (cts * dc) / 2**8
+            -- since dc's maximum is 255 the calculation goes (cts * dc) / 2^8
             th_product := std_logic_vector(shift_right(unsigned(cts) * unsigned(dc), 8));
             ths <= th_product(clk_width - 1 downto 0);
             state <= OUTPUT;

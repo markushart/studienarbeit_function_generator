@@ -68,7 +68,8 @@ begin
             end if;
         end if;
     end process count;
-
+    
+    -- CE = 0 enables the SCLK_EN
     SCLK_EN <= CLK_EN or CE;
 
 end Behavioral;

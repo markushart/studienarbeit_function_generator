@@ -15,7 +15,7 @@
 --              what the maximum value of the counter can be
 -- inputs:
 -- -clk: the clock signal, count is changed on rising edge
--- -clk_en: if 1 clock pauses, if 0 clock counts
+-- -clk_en: if 0 clock pauses, if 1 clock counts
 -- -R: low active asynchronous reset
 -- -D: direction in which to count (1: up, 0: down)
 -- -max_ticks: when count > max_ticks the counter is reset
@@ -42,7 +42,9 @@ use IEEE.std_logic_unsigned.all;
 --use UNISIM.VComponents.all;
 
 entity GEN_COUNTER is
-    generic(data_width : natural := 32);
+    generic(data_width         : natural   := 32;
+            reset_on_overflow  : std_logic := '1';
+            reset_on_underflow : std_logic := '1');
     port (CLK       : in  std_logic;
           CE        : in  std_logic;
           R         : in  std_logic;
@@ -67,14 +69,18 @@ begin
         if D = '1' then
             -- check for overflow
             if (count > max_ticks - inc) then
-                count := ZERO;
+                if reset_on_overflow = '1' then
+                    count := ZERO;
+                end if;
             else
                 count := count + inc;
             end if;
-        elsif D = '0' then
+        elsif D = '0'then
             -- check for underflow
             if (count < inc) then
-                count := max_ticks;
+                if reset_on_underflow = '1' then
+                    count := max_ticks;
+                end if;
             else
                 count := count - inc;
             end if;

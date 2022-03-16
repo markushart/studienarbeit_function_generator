@@ -20,7 +20,7 @@ class FuncGenUART:
 
     CONST, PWM, ZIGZAG, RAMP = range(4)
 
-    PRESCALE = 4 * 16
+    PRESCALE = 4 * 17
     FSYS = 100e6
     FMAX = FSYS / PRESCALE
     # defined by PRESCALE and the width of cyc_tick register
@@ -60,13 +60,11 @@ class FuncGenUART:
         return buffer
 
     def set_frequency(self, f: float):
-        if FuncGenUART.FMAX >= f > FuncGenUART.FMIN:
-            ct = int(FuncGenUART.FMAX / f)
-            self.send_instruction([FuncGenUART.CYCTICKS] + FuncGenUART.int2arg(ct))
-            return ct
-        else:
-            raise ValueError("f must be greater than %.2f and less than / equal to %.2f but was %.2f!" %
-                             (FuncGenUART.FMAX, FuncGenUART.FMIN, f))
+        assert FuncGenUART.FMAX >= f > FuncGenUART.FMIN, \
+             "f must be greater than %.2f and less than / equal to %.2f but was %.2f!" % (FuncGenUART.FMAX, FuncGenUART.FMIN, f)
+        ct = int(FuncGenUART.FMAX / f)
+        self.send_instruction([FuncGenUART.CYCTICKS] + FuncGenUART.int2arg(ct))
+        return ct
 
     def set_waveform(self, wv: int):
         if wv in range(4):

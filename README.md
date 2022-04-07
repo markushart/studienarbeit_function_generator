@@ -12,3 +12,4 @@ SETDUTYCYCLE | 0x04     | 7 - 0        | ändern des dutycycles der Rechteckfunk
 SETWVFRM     | 0x05     | 1 - 0        | ändern der Funktion 
 SETDIR       | 0x06     | 0            | ändern der Richtung der Rampenfunktion
 
+documentation: https://github.com/markushart/function_generator_doku.git
